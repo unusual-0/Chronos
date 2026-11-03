@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Chronos - Liquid Glass Clock & Pomodoro</title>
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#0c1220" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Chronos" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+
+    <!-- Google Font: SF Pro alternative - Inter & JetBrains Mono for clean tabular numbers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const i of document.querySelectorAll('link[rel="modulepreload"]'))s(i);new MutationObserver(i=>{for(const n of i)if(n.type==="childList")for(const a of n.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&s(a)}).observe(document,{childList:!0,subtree:!0});function e(i){const n={};return i.integrity&&(n.integrity=i.integrity),i.referrerPolicy&&(n.referrerPolicy=i.referrerPolicy),i.crossOrigin==="use-credentials"?n.credentials="include":i.crossOrigin==="anonymous"?n.credentials="omit":n.credentials="same-origin",n}function s(i){if(i.ep)return;i.ep=!0;const n=e(i);fetch(i.href,n)}})();class A{constructor(){this.ctx=null}init(){if(!this.ctx){const t=window.AudioContext||window.webkitAudioContext;t&&(this.ctx=new t)}this.ctx&&this.ctx.state==="suspended"&&this.ctx.resume()}tap(){if(this.init(),!this.ctx)return;const t=this.ctx.createOscillator(),e=this.ctx.createGain();if(t.type="sine",t.frequency.setValueAtTime(800,this.ctx.currentTime),t.frequency.exponentialRampToValueAtTime(200,this.ctx.currentTime+.04),e.gain.setValueAtTime(.08,this.ctx.currentTime),e.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.04),t.connect(e),e.connect(this.ctx.destination),t.start(),t.stop(this.ctx.currentTime+.04),navigator.vibrate)try{navigator.vibrate(8)}catch{}}lap(){if(this.init(),!this.ctx)return;const t=this.ctx.createOscillator(),e=this.ctx.createGain();if(t.type="triangle",t.frequency.setValueAtTime(587.33,this.ctx.currentTime),t.frequency.setValueAtTime(880,this.ctx.currentTime+.06),e.gain.setValueAtTime(.12,this.ctx.currentTime),e.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.25),t.connect(e),e.connect(this.ctx.destination),t.start(),t.stop(this.ctx.currentTime+.25),navigator.vibrate)try{navigator.vibrate(15)}catch{}}alert(){if(this.init(),!this.ctx)return;const t=this.ctx.currentTime;if([659.25,880,1318.51].forEach((e,s)=>{const i=this.ctx.createOscillator(),n=this.ctx.createGain();i.type="sine",i.frequency.setValueAtTime(e,t+s*.12),n.gain.setValueAtTime(.22,t+s*.12),n.gain.exponentialRampToValueAtTime(1e-4,t+s*.12+1.2),i.connect(n),n.connect(this.ctx.destination),i.start(t+s*.12),i.stop(t+s*.12+1.3)}),navigator.vibrate)try{navigator.vibrate([100,50,100,50,200])}catch{}}}const r=new A,D=[{id:"london",name:"London",timezone:"Europe/London"},{id:"newyork",name:"New York",timezone:"America/New_York"},{id:"tokyo",name:"Tokyo",timezone:"Asia/Tokyo"},{id:"sydney",name:"Sydney",timezone:"Australia/Sydney"},{id:"dhaka",name:"Dhaka",timezone:"Asia/Dhaka"}],M=[{id:"london",name:"London",timezone:"Europe/London"},{id:"newyork",name:"New York",timezone:"America/New_York"},{id:"tokyo",name:"Tokyo",timezone:"Asia/Tokyo"},{id:"paris",name:"Paris",timezone:"Europe/Paris"},{id:"dubai",name:"Dubai",timezone:"Asia/Dubai"},{id:"singapore",name:"Singapore",timezone:"Asia/Singapore"},{id:"sydney",name:"Sydney",timezone:"Australia/Sydney"},{id:"sanfrancisco",name:"San Francisco",timezone:"America/Los_Angeles"},{id:"dhaka",name:"Dhaka",timezone:"Asia/Dhaka"},{id:"berlin",name:"Berlin",timezone:"Europe/Berlin"},{id:"hongkong",name:"Hong Kong",timezone:"Asia/Hong_Kong"},{id:"toronto",name:"Toronto",timezone:"America/Toronto"}];class I{constructor(t){this.container=t;const e=localStorage.getItem("chronos-cities");this.cities=e?JSON.parse(e):D,this.timer=null,this.init()}save(){localStorage.setItem("chronos-cities",JSON.stringify(this.cities))}init(){this.container.innerHTML=`
+      <div class="world-container">
+        \x3C!-- Local Time Hero Card with Analog Dial -->
+        <div class="local-hero-card glass-panel">
+          <span class="local-city" id="localCityLabel">Local Time</span>
+          <div class="analog-clock-container">
+            <div class="analog-dial">
+              <div class="analog-hand hand-hour" id="localHourHand"></div>
+              <div class="analog-hand hand-minute" id="localMinuteHand"></div>
+              <div class="analog-hand hand-second" id="localSecondHand"></div>
+              <div class="analog-pin"></div>
+            </div>
+          </div>
+          <div class="local-time num-mono" id="localDigitalTime">00:00:00</div>
+          <div class="local-date" id="localDateStr">Loading date...</div>
+        </div>
+
+        \x3C!-- World Cities Section -->
+        <div class="section-header">
+          <h2 class="section-title">World Clocks</h2>
+          <button class="glass-button" id="addCityBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add City
+          </button>
+        </div>
+
+        <div class="cities-grid" id="citiesGrid"></div>
+      </div>
+
+      \x3C!-- Add City Modal -->
+      <div class="glass-modal-backdrop" id="cityModal">
+        <div class="glass-modal">
+          <div class="modal-header">
+            <h3 class="modal-title">Add World City</h3>
+            <button class="icon-btn" id="closeCityModalBtn">✕</button>
+          </div>
+          <div class="modal-body">
+            <input type="text" class="glass-input" id="citySearchInput" placeholder="Search city or timezone..." />
+            <div class="city-select-list" id="citySelectList"></div>
+          </div>
+        </div>
+      </div>
+    `,this.bindEvents(),this.renderCities(),this.updateTimes(),this.startTicker()}bindEvents(){const t=this.container.querySelector("#addCityBtn"),e=this.container.querySelector("#cityModal"),s=this.container.querySelector("#closeCityModalBtn"),i=this.container.querySelector("#citySearchInput");t.addEventListener("click",()=>{r.tap(),this.populateCitySelect(),e.classList.add("open"),i.focus()}),s.addEventListener("click",()=>{r.tap(),e.classList.remove("open")}),e.addEventListener("click",n=>{n.target===e&&e.classList.remove("open")}),i.addEventListener("input",n=>{this.populateCitySelect(n.target.value)})}populateCitySelect(t=""){const e=this.container.querySelector("#citySelectList"),s=new Set(this.cities.map(a=>a.id)),i=t.toLowerCase().trim(),n=M.filter(a=>!s.has(a.id)&&(a.name.toLowerCase().includes(i)||a.timezone.toLowerCase().includes(i)));if(n.length===0){e.innerHTML='<div style="text-align:center; padding: 20px; color: var(--text-tertiary);">No cities available or all added</div>';return}e.innerHTML=n.map(a=>`
+      <div class="city-option-item" data-id="${a.id}">
+        <div>
+          <div style="font-weight: 600;">${a.name}</div>
+          <div style="font-size: 0.8rem; color: var(--text-tertiary);">${a.timezone}</div>
+        </div>
+        <span style="color: var(--accent-primary); font-size: 1.2rem;">+</span>
+      </div>
+    `).join(""),e.querySelectorAll(".city-option-item").forEach(a=>{a.addEventListener("click",()=>{r.tap();const o=M.find(c=>c.id===a.dataset.id);o&&(this.cities.push(o),this.save(),this.renderCities(),this.updateTimes(),this.container.querySelector("#cityModal").classList.remove("open"))})})}renderCities(){const t=this.container.querySelector("#citiesGrid");if(t){if(this.cities.length===0){t.innerHTML='<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-tertiary);">No world cities added. Click "Add City" to start.</div>';return}t.innerHTML=this.cities.map(e=>`
+      <div class="city-card glass-panel" data-id="${e.id}">
+        <button class="city-delete-btn" data-id="${e.id}" title="Remove city">✕</button>
+        <div class="city-info">
+          <span class="city-offset" id="offset-${e.id}">--</span>
+          <span class="city-name">${e.name}</span>
+        </div>
+        <div class="city-time-wrap">
+          <span class="city-time num-mono" id="time-${e.id}">00:00</span>
+          <span class="city-period" id="period-${e.id}">AM</span>
+        </div>
+      </div>
+    `).join(""),t.querySelectorAll(".city-delete-btn").forEach(e=>{e.addEventListener("click",s=>{s.stopPropagation(),r.tap(),this.cities=this.cities.filter(i=>i.id!==e.dataset.id),this.save(),this.renderCities(),this.updateTimes()})})}}updateTimes(){const t=new Date,e=t.getHours(),s=t.getMinutes(),i=t.getSeconds(),n=t.getMilliseconds(),a=(i+n/1e3)*6,o=(s+i/60)*6,c=(e%12+s/60)*30,p=this.container.querySelector("#localSecondHand"),f=this.container.querySelector("#localMinuteHand"),b=this.container.querySelector("#localHourHand"),w=this.container.querySelector("#localDigitalTime"),S=this.container.querySelector("#localDateStr");p&&(p.style.transform=`rotate(${a}deg)`),f&&(f.style.transform=`rotate(${o}deg)`),b&&(b.style.transform=`rotate(${c}deg)`),w&&(w.textContent=t.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:!1})),S&&(S.textContent=t.toLocaleDateString([],{weekday:"long",month:"short",day:"numeric",year:"numeric"})),this.cities.forEach(d=>{try{const g=t.toLocaleTimeString("en-US",{timeZone:d.timezone,hour:"2-digit",minute:"2-digit",hour12:!0}),[E,B]=g.split(" "),x=this.container.querySelector(`#time-${d.id}`),k=this.container.querySelector(`#period-${d.id}`),L=this.container.querySelector(`#offset-${d.id}`);if(x&&(x.textContent=E),k&&(k.textContent=B||""),L){const O=-t.getTimezoneOffset(),T=new Intl.DateTimeFormat("en-US",{timeZone:d.timezone,timeZoneName:"shortOffset"}).formatToParts(t).find(C=>C.type==="timeZoneName");L.textContent=T?T.value:d.timezone}}catch(g){console.error(g)}})}startTicker(){const t=()=>{this.updateTimes(),this.timer=requestAnimationFrame(t)};this.timer=requestAnimationFrame(t)}destroy(){this.timer&&cancelAnimationFrame(this.timer)}}const P=[{id:"1",time:"07:00",label:"Morning Wakeup",enabled:!0,days:["Mon","Tue","Wed","Thu","Fri"]},{id:"2",time:"08:30",label:"Team Standup",enabled:!1,days:["Mon","Tue","Wed","Thu","Fri"]}];class ${constructor(t){this.container=t;const e=localStorage.getItem("chronos-alarms");this.alarms=e?JSON.parse(e):P,this.checkInterval=null,this.init()}save(){localStorage.setItem("chronos-alarms",JSON.stringify(this.alarms))}init(){this.container.innerHTML=`
+      <div class="alarms-view-wrapper">
+        <div class="section-header">
+          <h2 class="section-title">Alarms</h2>
+          <button class="glass-button" id="newAlarmBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Alarm
+          </button>
+        </div>
+
+        <div class="alarm-list" id="alarmList"></div>
+      </div>
+
+      \x3C!-- Add/Edit Alarm Modal -->
+      <div class="glass-modal-backdrop" id="alarmModal">
+        <div class="glass-modal">
+          <div class="modal-header">
+            <h3 class="modal-title">Set Alarm</h3>
+            <button class="icon-btn" id="closeAlarmModalBtn">✕</button>
+          </div>
+          <div class="modal-body">
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Time</label>
+            <input type="time" class="glass-input" id="alarmTimeInput" value="07:00" required />
+
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Label</label>
+            <input type="text" class="glass-input" id="alarmLabelInput" placeholder="e.g. Morning Workout" />
+
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Repeat Days</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="alarmDaysSelect">
+              ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(t=>`
+                <button type="button" class="glass-pill day-btn" data-day="${t}" style="cursor: pointer;">${t}</button>
+              `).join("")}
+            </div>
+
+            <button class="glass-button primary" id="saveAlarmBtn" style="margin-top: 12px;">Save Alarm</button>
+          </div>
+        </div>
+      </div>
+    `,this.bindEvents(),this.renderAlarms(),this.startChecker()}bindEvents(){const t=this.container.querySelector("#newAlarmBtn"),e=this.container.querySelector("#alarmModal"),s=this.container.querySelector("#closeAlarmModalBtn"),i=this.container.querySelector("#saveAlarmBtn"),n=this.container.querySelector("#alarmDaysSelect");t.addEventListener("click",()=>{r.tap(),e.classList.add("open")}),s.addEventListener("click",()=>{r.tap(),e.classList.remove("open")}),e.addEventListener("click",a=>{a.target===e&&e.classList.remove("open")}),n.querySelectorAll(".day-btn").forEach(a=>{a.addEventListener("click",()=>{r.tap(),a.classList.toggle("primary")})}),i.addEventListener("click",()=>{r.tap();const a=this.container.querySelector("#alarmTimeInput").value,o=this.container.querySelector("#alarmLabelInput").value||"Alarm",c=Array.from(n.querySelectorAll(".day-btn.primary")).map(p=>p.dataset.day);a&&(this.alarms.push({id:Date.now().toString(),time:a,label:o,enabled:!0,days:c.length>0?c:["Every day"]}),this.save(),this.renderAlarms(),e.classList.remove("open"))})}renderAlarms(){const t=this.container.querySelector("#alarmList");if(t){if(this.alarms.length===0){t.innerHTML='<div style="text-align: center; padding: 40px; color: var(--text-tertiary);">No alarms configured.</div>';return}t.innerHTML=this.alarms.map(e=>{const[s,i]=e.time.split(":").map(Number),n=s>=12,o=`${(s%12||12).toString().padStart(2,"0")}:${i.toString().padStart(2,"0")}`,c=n?"PM":"AM";return`
+        <div class="alarm-card glass-panel ${e.enabled?"":"disabled"}" data-id="${e.id}">
+          <div class="alarm-info">
+            <div class="alarm-time-wrap">
+              <span class="alarm-time num-mono">${o}</span>
+              <span class="alarm-ampm">${c}</span>
+            </div>
+            <span class="alarm-label">${e.label}</span>
+            <span class="alarm-days">${e.days.join(", ")}</span>
+          </div>
+          <div class="alarm-actions">
+            <label class="glass-switch">
+              <input type="checkbox" class="alarm-toggle" data-id="${e.id}" ${e.enabled?"checked":""}>
+              <span class="switch-slider"></span>
+            </label>
+            <button class="icon-btn delete-alarm-btn" data-id="${e.id}" title="Delete" style="width: 32px; height: 32px;">✕</button>
+          </div>
+        </div>
+      `}).join(""),t.querySelectorAll(".alarm-toggle").forEach(e=>{e.addEventListener("change",s=>{r.tap();const i=this.alarms.find(n=>n.id===e.dataset.id);i&&(i.enabled=s.target.checked,this.save(),this.renderAlarms())})}),t.querySelectorAll(".delete-alarm-btn").forEach(e=>{e.addEventListener("click",()=>{r.tap(),this.alarms=this.alarms.filter(s=>s.id!==e.dataset.id),this.save(),this.renderAlarms()})})}}startChecker(){this.checkInterval=setInterval(()=>{const t=new Date,e=t.getHours().toString().padStart(2,"0"),s=t.getMinutes().toString().padStart(2,"0"),i=`${e}:${s}`,a=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][t.getDay()];t.getSeconds()===0&&this.alarms.forEach(o=>{o.enabled&&o.time===i&&(o.days.includes("Every day")||o.days.includes(a))&&(r.alert(),Notification.permission==="granted"?new Notification(`⏰ Alarm: ${o.label}`,{body:`It's ${i}`}):alert(`⏰ Alarm: ${o.label} (${i})`))})},1e3)}destroy(){this.checkInterval&&clearInterval(this.checkInterval)}}class R{constructor(t,e){this.container=t,this.miniManager=e,this.running=!1,this.startTime=0,this.elapsedTime=0,this.laps=[],this.animId=null,this.init()}init(){this.container.innerHTML=`
+      <div class="counter-stage">
+        <div class="ring-wrapper">
+          <svg class="ring-svg" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="90" />
+            <circle class="ring-progress" id="stopwatchProgressRing" cx="100" cy="100" r="90"
+              stroke-dasharray="565.48"
+              stroke-dashoffset="565.48" />
+          </svg>
+          <div class="counter-center-text">
+            <span class="counter-digits num-mono" id="stopwatchDigits">00:00.00</span>
+            <span class="counter-sub">Stopwatch</span>
+          </div>
+        </div>
+
+        <div class="counter-controls">
+          <button class="glass-button" id="swResetLapBtn" disabled>Reset</button>
+          <button class="glass-button primary" id="swStartStopBtn">Start</button>
+          <button class="icon-btn" id="swMiniBtn" title="Shrink to Mini Floating Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="laps-container" id="stopwatchLapsList"></div>
+    `,this.bindEvents()}bindEvents(){const t=this.container.querySelector("#swStartStopBtn"),e=this.container.querySelector("#swResetLapBtn"),s=this.container.querySelector("#swMiniBtn");t.addEventListener("click",()=>{r.tap(),this.running?this.stop():this.start()}),e.addEventListener("click",()=>{r.tap(),this.running?this.recordLap():this.reset()}),s.addEventListener("click",()=>{r.tap(),this.miniManager&&this.miniManager.open("Stopwatch",()=>this.getFormattedTime(),()=>this.elapsedTime%6e4/6e4)})}start(){this.running=!0,this.startTime=performance.now()-this.elapsedTime;const t=this.container.querySelector("#swStartStopBtn"),e=this.container.querySelector("#swResetLapBtn");t.textContent="Stop",t.style.background="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",e.textContent="Lap",e.disabled=!1;const s=()=>{this.elapsedTime=performance.now()-this.startTime,this.renderDisplay(),this.animId=requestAnimationFrame(s)};this.animId=requestAnimationFrame(s)}stop(){this.running=!1,cancelAnimationFrame(this.animId);const t=this.container.querySelector("#swStartStopBtn"),e=this.container.querySelector("#swResetLapBtn");t.textContent="Start",t.style.background="",e.textContent="Reset"}reset(){this.stop(),this.elapsedTime=0,this.laps=[],this.renderDisplay(),this.renderLaps();const t=this.container.querySelector("#swResetLapBtn");t.disabled=!0}recordLap(){r.lap();const t=this.elapsedTime,e=this.laps.reduce((i,n)=>i+n.duration,0),s=t-e;this.laps.unshift({index:this.laps.length+1,duration:s,total:t}),this.renderLaps()}getFormattedTime(t=this.elapsedTime){const e=Math.floor(t/1e3),s=Math.floor(e/60).toString().padStart(2,"0"),i=(e%60).toString().padStart(2,"0"),n=Math.floor(t%1e3/10).toString().padStart(2,"0");return`${s}:${i}.${n}`}renderDisplay(){const t=this.container.querySelector("#stopwatchDigits"),e=this.container.querySelector("#stopwatchProgressRing");if(t&&(t.textContent=this.getFormattedTime()),e){const s=this.elapsedTime%6e4/6e4,i=2*Math.PI*90;e.style.strokeDashoffset=(i*(1-s)).toString()}}renderLaps(){const t=this.container.querySelector("#stopwatchLapsList");if(!t)return;if(this.laps.length===0){t.innerHTML="";return}let e=1/0,s=-1/0;this.laps.length>=2&&this.laps.forEach(i=>{i.duration<e&&(e=i.duration),i.duration>s&&(s=i.duration)}),t.innerHTML=this.laps.map(i=>{let n="";return this.laps.length>=2&&(i.duration===e&&(n="fastest"),i.duration===s&&(n="slowest")),`
+        <div class="lap-item ${n}">
+          <span style="font-weight: 600;">Lap ${i.index}</span>
+          <span class="num-mono" style="opacity: 0.75;">+${this.getFormattedTime(i.duration)}</span>
+          <span class="num-mono" style="font-weight: 700;">${this.getFormattedTime(i.total)}</span>
+        </div>
+      `}).join("")}destroy(){this.animId&&cancelAnimationFrame(this.animId)}}class F{constructor(t,e){this.container=t,this.miniManager=e,this.duration=300,this.remaining=300,this.endTime=null,this.running=!1,this.interval=null,this.init()}init(){this.container.innerHTML=`
+      <div class="counter-stage">
+        <div class="ring-wrapper">
+          <svg class="ring-svg" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="90" />
+            <circle class="ring-progress" id="timerProgressRing" cx="100" cy="100" r="90"
+              stroke-dasharray="565.48"
+              stroke-dashoffset="0" />
+          </svg>
+          <div class="counter-center-text">
+            <span class="counter-digits num-mono" id="timerDigits">05:00</span>
+            <span class="counter-sub" id="timerStatusLabel">Ready</span>
+          </div>
+        </div>
+
+        <div class="counter-controls">
+          <button class="glass-button" id="timerResetBtn">Cancel</button>
+          <button class="glass-button primary" id="timerStartBtn">Start</button>
+          <button class="icon-btn" id="timerMiniBtn" title="Shrink to Mini Floating Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
+
+        \x3C!-- Presets -->
+        <div class="timer-presets">
+          <button class="preset-chip" data-mins="1">1 min</button>
+          <button class="preset-chip" data-mins="3">3 min</button>
+          <button class="preset-chip" data-mins="5">5 min</button>
+          <button class="preset-chip" data-mins="10">10 min</button>
+          <button class="preset-chip" data-mins="15">15 min</button>
+          <button class="preset-chip" data-mins="20">20 min</button>
+          <button class="preset-chip" data-mins="30">30 min</button>
+          <button class="preset-chip" data-mins="45">45 min</button>
+        </div>
+      </div>
+    `,this.bindEvents(),this.updateDisplay()}bindEvents(){const t=this.container.querySelector("#timerStartBtn"),e=this.container.querySelector("#timerResetBtn"),s=this.container.querySelector("#timerMiniBtn"),i=this.container.querySelectorAll(".preset-chip");t.addEventListener("click",()=>{r.tap(),this.running?this.pause():this.start()}),e.addEventListener("click",()=>{r.tap(),this.reset()}),i.forEach(n=>{n.addEventListener("click",()=>{r.tap();const a=parseInt(n.dataset.mins,10);this.setDuration(a*60)})}),s.addEventListener("click",()=>{r.tap(),this.miniManager&&this.miniManager.open("Timer",()=>this.getFormattedTime(),()=>this.remaining/this.duration)})}setDuration(t){this.pause(),this.duration=t,this.remaining=t,this.updateDisplay()}start(){this.remaining<=0&&(this.remaining=this.duration),this.running=!0,this.endTime=Date.now()+this.remaining*1e3;const t=this.container.querySelector("#timerStartBtn");t.textContent="Pause",t.style.background="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",this.container.querySelector("#timerStatusLabel").textContent="Counting down",this.interval=setInterval(()=>{const e=this.endTime-Date.now();e<=0?(this.remaining=0,this.updateDisplay(),this.complete()):(this.remaining=Math.ceil(e/1e3),this.updateDisplay())},200)}pause(){this.running=!1,this.interval&&clearInterval(this.interval);const t=this.container.querySelector("#timerStartBtn");t&&(t.textContent="Resume",t.style.background="");const e=this.container.querySelector("#timerStatusLabel");e&&(e.textContent="Paused")}reset(){this.pause(),this.remaining=this.duration;const t=this.container.querySelector("#timerStartBtn");t&&(t.textContent="Start");const e=this.container.querySelector("#timerStatusLabel");e&&(e.textContent="Ready"),this.updateDisplay()}complete(){this.pause(),r.alert();const t=this.container.querySelector("#timerStatusLabel");t&&(t.textContent="Time Up!"),Notification.permission==="granted"&&new Notification("⏰ Timer Complete!",{body:"Your countdown timer has elapsed."})}getFormattedTime(t=this.remaining){const e=Math.floor(t/60).toString().padStart(2,"0"),s=(t%60).toString().padStart(2,"0");return`${e}:${s}`}updateDisplay(){const t=this.container.querySelector("#timerDigits"),e=this.container.querySelector("#timerProgressRing");if(t&&(t.textContent=this.getFormattedTime()),e&&this.duration>0){const s=this.remaining/this.duration,i=2*Math.PI*90;e.style.strokeDashoffset=(i*(1-s)).toString()}}destroy(){this.interval&&clearInterval(this.interval)}}class W{constructor(t,e){this.container=t,this.miniManager=e,this.workMins=25,this.breakMins=5,this.longBreakMins=30,this.targetRounds=4,this.currentRound=1,this.phase="work",this.duration=this.workMins*60,this.remaining=this.workMins*60,this.endTime=null,this.running=!1,this.interval=null,this.init()}init(){this.container.innerHTML=`
+      <div class="counter-stage">
+        \x3C!-- Status Pills -->
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+          <span class="glass-pill" id="focusPhasePill" style="font-weight: 700; color: #ffffff;">Deep Work</span>
+          <span class="glass-pill" id="focusRoundPill">Round 1 of 4</span>
+        </div>
+
+        <div class="ring-wrapper">
+          <svg class="ring-svg" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="90" />
+            <circle class="ring-progress" id="focusProgressRing" cx="100" cy="100" r="90"
+              stroke-dasharray="565.48"
+              stroke-dashoffset="0" />
+          </svg>
+          <div class="counter-center-text">
+            <span class="counter-digits num-mono" id="focusDigits">25:00</span>
+            <span class="counter-sub" id="focusPhaseLabel">Work Session</span>
+          </div>
+        </div>
+
+        <div class="counter-controls">
+          <button class="glass-button" id="focusSkipBtn">Skip Phase</button>
+          <button class="glass-button primary" id="focusStartBtn">Start Focus</button>
+          <button class="icon-btn" id="focusMiniBtn" title="Shrink to Mini Floating Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+          <button class="icon-btn" id="focusConfigBtn" title="Customize Routine">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      \x3C!-- Settings Modal -->
+      <div class="glass-modal-backdrop" id="focusSettingsModal">
+        <div class="glass-modal">
+          <div class="modal-header">
+            <h3 class="modal-title">Pomodoro Routine Settings</h3>
+            <button class="icon-btn" id="closeFocusModalBtn">✕</button>
+          </div>
+          <div class="modal-body">
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Work Duration (minutes)</label>
+            <input type="number" class="glass-input" id="cfgWorkMins" value="${this.workMins}" min="1" max="90" />
+
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Short Break (minutes)</label>
+            <input type="number" class="glass-input" id="cfgBreakMins" value="${this.breakMins}" min="1" max="30" />
+
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Long Break (minutes)</label>
+            <input type="number" class="glass-input" id="cfgLongBreakMins" value="${this.longBreakMins}" min="1" max="60" />
+
+            <label style="font-size: 0.85rem; color: var(--text-tertiary);">Rounds Before Long Break</label>
+            <input type="number" class="glass-input" id="cfgTargetRounds" value="${this.targetRounds}" min="1" max="10" />
+
+            <button class="glass-button primary" id="saveFocusCfgBtn" style="margin-top: 10px;">Apply Settings</button>
+          </div>
+        </div>
+      </div>
+    `,this.bindEvents(),this.updateDisplay()}bindEvents(){const t=this.container.querySelector("#focusStartBtn"),e=this.container.querySelector("#focusSkipBtn"),s=this.container.querySelector("#focusMiniBtn"),i=this.container.querySelector("#focusConfigBtn"),n=this.container.querySelector("#focusSettingsModal"),a=this.container.querySelector("#closeFocusModalBtn"),o=this.container.querySelector("#saveFocusCfgBtn");t.addEventListener("click",()=>{r.tap(),this.running?this.pause():this.start()}),e.addEventListener("click",()=>{r.tap(),this.advancePhase()}),i.addEventListener("click",()=>{r.tap(),n.classList.add("open")}),a.addEventListener("click",()=>{r.tap(),n.classList.remove("open")}),n.addEventListener("click",c=>{c.target===n&&n.classList.remove("open")}),o.addEventListener("click",()=>{r.tap(),this.workMins=parseInt(this.container.querySelector("#cfgWorkMins").value,10)||25,this.breakMins=parseInt(this.container.querySelector("#cfgBreakMins").value,10)||5,this.longBreakMins=parseInt(this.container.querySelector("#cfgLongBreakMins").value,10)||30,this.targetRounds=parseInt(this.container.querySelector("#cfgTargetRounds").value,10)||4,this.resetPhase(),n.classList.remove("open")}),s.addEventListener("click",()=>{r.tap(),this.miniManager&&this.miniManager.open(this.phase==="work"?"Focus Work":"Break",()=>this.getFormattedTime(),()=>this.remaining/this.duration)})}start(){this.running=!0,this.endTime=Date.now()+this.remaining*1e3;const t=this.container.querySelector("#focusStartBtn");t.textContent="Pause",t.style.background="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",this.interval=setInterval(()=>{const e=this.endTime-Date.now();e<=0?(this.remaining=0,this.updateDisplay(),this.completePhase()):(this.remaining=Math.ceil(e/1e3),this.updateDisplay())},200)}pause(){this.running=!1,this.interval&&clearInterval(this.interval);const t=this.container.querySelector("#focusStartBtn");t&&(t.textContent="Resume",t.style.background="")}completePhase(){this.pause(),r.alert(),setTimeout(()=>{this.advancePhase(),this.start()},1200)}advancePhase(){this.phase==="work"?this.currentRound>=this.targetRounds?(this.phase="longBreak",this.duration=this.longBreakMins*60,this.remaining=this.duration):(this.phase="break",this.duration=this.breakMins*60,this.remaining=this.duration):this.phase==="break"?(this.currentRound+=1,this.phase="work",this.duration=this.workMins*60,this.remaining=this.duration):(this.currentRound=1,this.phase="work",this.duration=this.workMins*60,this.remaining=this.duration),this.applyFocusTheme(),this.resetControls(),this.updateDisplay()}resetPhase(){this.pause(),this.phase==="work"?this.duration=this.workMins*60:this.phase==="break"?this.duration=this.breakMins*60:this.duration=this.longBreakMins*60,this.remaining=this.duration,this.resetControls(),this.updateDisplay()}resetControls(){const t=this.container.querySelector("#focusStartBtn");t&&(t.textContent="Start",t.style.background="")}applyFocusTheme(){this.phase==="work"?document.documentElement.setAttribute("data-mode","focus"):document.documentElement.setAttribute("data-mode","break")}getFormattedTime(t=this.remaining){const e=Math.floor(t/60).toString().padStart(2,"0"),s=(t%60).toString().padStart(2,"0");return`${e}:${s}`}updateDisplay(){const t=this.container.querySelector("#focusDigits"),e=this.container.querySelector("#focusProgressRing"),s=this.container.querySelector("#focusPhasePill"),i=this.container.querySelector("#focusRoundPill"),n=this.container.querySelector("#focusPhaseLabel");if(t&&(t.textContent=this.getFormattedTime()),s&&(this.phase==="work"?s.textContent="🔥 Deep Focus":this.phase==="break"?s.textContent="☕ Short Break":s.textContent="🌴 Long Recovery"),i&&(i.textContent=`Round ${this.currentRound} of ${this.targetRounds}`),n&&(n.textContent=this.phase==="work"?"Stay Focused":"Take a breath"),e&&this.duration>0){const a=this.remaining/this.duration,o=2*Math.PI*90;e.style.strokeDashoffset=(o*(1-a)).toString()}}destroy(){this.interval&&clearInterval(this.interval)}}class H{constructor(){this.widgetEl=null,this.pipWindow=null,this.timeGetter=null,this.progressGetter=null,this.animId=null,this.title="Timer",this.isDragging=!1,this.dragOffset={x:0,y:0},this.createDom()}createDom(){this.widgetEl=document.createElement("div"),this.widgetEl.className="mini-widget",this.widgetEl.innerHTML=`
+      <svg class="mini-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+      <svg class="ring-svg" viewBox="0 0 200 200" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;">
+        <circle class="ring-bg" cx="100" cy="100" r="92" stroke-width="6" />
+        <circle class="ring-progress" id="miniRingProgress" cx="100" cy="100" r="92" stroke-width="6"
+          stroke-dasharray="578.05"
+          stroke-dashoffset="0" />
+      </svg>
+      <span class="mini-label" id="miniTitle">Focus</span>
+      <span class="mini-time num-mono" id="miniDigits">00:00</span>
+    `,document.body.appendChild(this.widgetEl),this.bindDragAndExpand()}bindDragAndExpand(){let t=!1;this.widgetEl.addEventListener("pointerdown",e=>{t=!1,this.isDragging=!0;const s=this.widgetEl.getBoundingClientRect();this.dragOffset.x=e.clientX-s.left,this.dragOffset.y=e.clientY-s.top,this.widgetEl.setPointerCapture(e.pointerId)}),this.widgetEl.addEventListener("pointermove",e=>{if(!this.isDragging)return;t=!0;const s=e.clientX-this.dragOffset.x,i=e.clientY-this.dragOffset.y;this.widgetEl.style.left=`${Math.max(10,Math.min(window.innerWidth-190,s))}px`,this.widgetEl.style.top=`${Math.max(10,Math.min(window.innerHeight-190,i))}px`,this.widgetEl.style.right="auto",this.widgetEl.style.bottom="auto"}),this.widgetEl.addEventListener("pointerup",e=>{this.isDragging=!1;try{this.widgetEl.releasePointerCapture(e.pointerId)}catch{}t||(r.tap(),this.close())})}async open(t,e,s){if(this.title=t,this.timeGetter=e,this.progressGetter=s,"documentPictureInPicture"in window)try{this.pipWindow=await window.documentPictureInPicture.requestWindow({width:240,height:240}),[...document.styleSheets].forEach(n=>{try{const a=[...n.cssRules].map(c=>c.cssText).join(""),o=document.createElement("style");o.textContent=a,this.pipWindow.document.head.appendChild(o)}catch{const o=document.createElement("link");n.href&&(o.rel="stylesheet",o.type=n.type,o.media=n.media,o.href=n.href,this.pipWindow.document.head.appendChild(o))}}),this.pipWindow.document.body.style.margin="0",this.pipWindow.document.body.style.display="flex",this.pipWindow.document.body.style.alignItems="center",this.pipWindow.document.body.style.justifyContent="center",this.pipWindow.document.body.style.background="#060913",this.pipWindow.document.body.style.overflow="hidden";const i=this.widgetEl.cloneNode(!0);i.style.display="flex",i.style.position="relative",i.style.inset="auto",this.pipWindow.document.body.appendChild(i),this.pipWindow.addEventListener("pagehide",()=>{this.pipWindow=null}),this.startPipLoop(i);return}catch(i){console.warn("PIP failed or rejected, using in-page floating widget:",i)}this.widgetEl.querySelector("#miniTitle").textContent=this.title,this.widgetEl.classList.add("active"),this.startInPageLoop()}startInPageLoop(){const t=()=>{if(this.widgetEl.classList.contains("active")){if(this.timeGetter&&(this.widgetEl.querySelector("#miniDigits").textContent=this.timeGetter()),this.progressGetter){const e=this.progressGetter(),s=2*Math.PI*92,i=this.widgetEl.querySelector("#miniRingProgress");i&&(i.style.strokeDashoffset=(s*(1-e)).toString())}this.animId=requestAnimationFrame(t)}};this.animId=requestAnimationFrame(t)}startPipLoop(t){const e=()=>{if(!(!this.pipWindow||this.pipWindow.closed)){if(this.timeGetter&&(t.querySelector("#miniDigits").textContent=this.timeGetter()),this.progressGetter){const s=this.progressGetter(),i=2*Math.PI*92,n=t.querySelector("#miniRingProgress");n&&(n.style.strokeDashoffset=(i*(1-s)).toString())}requestAnimationFrame(e)}};requestAnimationFrame(e)}close(){this.widgetEl.classList.remove("active"),this.pipWindow&&!this.pipWindow.closed&&(this.pipWindow.close(),this.pipWindow=null),this.animId&&cancelAnimationFrame(this.animId)}}"serviceWorker"in navigator&&window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").then(l=>{console.log("SW registered:",l.scope)}).catch(l=>{console.log("SW registration error:",l)})});const z=document.querySelector("#app");z.innerHTML=`
+  <div class="liquid-canvas">
+    <div class="liquid-orb orb-1"></div>
+    <div class="liquid-orb orb-2"></div>
+    <div class="liquid-orb orb-3"></div>
+  </div>
+
+  <header class="app-header">
+    <div class="app-brand">
+      <div class="app-brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div>
+        <h1 class="app-brand-title">Chronos</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="icon-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+      <button id="pwaInstallBtn" class="icon-btn" style="display: none;" title="Install Chronos App" aria-label="Install App">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="view-container">
+    <div id="view-world" class="view-section active"></div>
+    <div id="view-alarm" class="view-section"></div>
+    <div id="view-stopwatch" class="view-section"></div>
+    <div id="view-timer" class="view-section"></div>
+    <div id="view-focus" class="view-section"></div>
+  </main>
+
+  <nav class="glass-tab-bar" aria-label="Main Navigation">
+    <button class="tab-btn active" data-tab="world">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>World</span>
+    </button>
+    <button class="tab-btn" data-tab="alarm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="m5 3 4 4"/><path d="m19 3-4 4"/></svg>
+      <span>Alarm</span>
+    </button>
+    <button class="tab-btn" data-tab="stopwatch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="8"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="14" x2="15" y2="11"/></svg>
+      <span>Stopwatch</span>
+    </button>
+    <button class="tab-btn" data-tab="timer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+      <span>Timer</span>
+    </button>
+    <button class="tab-btn" data-tab="focus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      <span>Focus</span>
+    </button>
+  </nav>
+`;const y=document.querySelector("#themeToggleBtn");let u=localStorage.getItem("chronos-theme")||"dark";document.documentElement.setAttribute("data-theme",u);y==null||y.addEventListener("click",()=>{r.tap(),u=u==="dark"?"light":"dark",document.documentElement.setAttribute("data-theme",u),localStorage.setItem("chronos-theme",u)});let m=null;const h=document.querySelector("#pwaInstallBtn");window.addEventListener("beforeinstallprompt",l=>{l.preventDefault(),m=l,h&&(h.style.display="flex")});h==null||h.addEventListener("click",async()=>{if(r.tap(),m){m.prompt();const{outcome:l}=await m.userChoice;l==="accepted"&&(h.style.display="none"),m=null}});"Notification"in window&&Notification.permission==="default"&&Notification.requestPermission();const v=new H;new I(document.querySelector("#view-world"));new $(document.querySelector("#view-alarm"));new R(document.querySelector("#view-stopwatch"),v);new F(document.querySelector("#view-timer"),v);const N=new W(document.querySelector("#view-focus"),v),q=document.querySelectorAll(".tab-btn"),V={world:document.querySelector("#view-world"),alarm:document.querySelector("#view-alarm"),stopwatch:document.querySelector("#view-stopwatch"),timer:document.querySelector("#view-timer"),focus:document.querySelector("#view-focus")};q.forEach(l=>{l.addEventListener("click",()=>{r.tap();const t=l.dataset.tab;q.forEach(e=>e.classList.remove("active")),l.classList.add("active"),Object.entries(V).forEach(([e,s])=>{e===t?s.classList.add("active"):s.classList.remove("active")}),t==="focus"?N.applyFocusTheme():document.documentElement.removeAttribute("data-mode")})});</script>
+    <style rel="stylesheet" crossorigin>:root{--bg-gradient-mesh-1: rgba(56, 189, 248, .28);--bg-gradient-mesh-2: rgba(99, 102, 241, .24);--bg-gradient-mesh-3: rgba(236, 72, 153, .18);--bg-gradient-mesh-4: rgba(14, 165, 233, .15);--bg-base: #060913;--glass-surface-base: rgba(255, 255, 255, .05);--glass-surface-card: rgba(255, 255, 255, .07);--glass-surface-elevated: rgba(255, 255, 255, .12);--glass-surface-pill: rgba(255, 255, 255, .1);--glass-surface-sunken: rgba(0, 0, 0, .28);--glass-border-light: rgba(255, 255, 255, .24);--glass-border-subtle: rgba(255, 255, 255, .12);--glass-border-dim: rgba(255, 255, 255, .06);--glass-border-highlight: linear-gradient( 135deg, rgba(255, 255, 255, .45) 0%, rgba(255, 255, 255, .1) 45%, rgba(255, 255, 255, .02) 60%, rgba(255, 255, 255, .18) 100% );--glass-blur-sm: blur(12px) saturate(190%);--glass-blur-md: blur(24px) saturate(210%);--glass-blur-lg: blur(40px) saturate(240%);--glass-blur-dock: blur(32px) saturate(220%);--glass-shadow-ambient: 0 16px 36px -8px rgba(0, 0, 0, .45);--glass-shadow-float: 0 24px 48px -12px rgba(0, 0, 0, .55), 0 0 20px -2px rgba(255, 255, 255, .04) inset;--glass-shadow-inset: inset 0 1px 1px 0 rgba(255, 255, 255, .25), inset 0 -1px 1px 0 rgba(0, 0, 0, .25);--glass-glow-accent: 0 0 35px -5px var(--accent-glow, rgba(56, 189, 248, .4));--accent-primary: #38bdf8;--accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);--accent-glow: rgba(56, 189, 248, .45);--text-primary: #f8fafc;--text-secondary: rgba(248, 250, 252, .72);--text-tertiary: rgba(248, 250, 252, .45);--text-muted: rgba(248, 250, 252, .25);--radius-xs: 8px;--radius-sm: 14px;--radius-md: 22px;--radius-lg: 32px;--radius-full: 9999px;--spring-bounce: cubic-bezier(.34, 1.56, .64, 1);--spring-smooth: cubic-bezier(.16, 1, .3, 1);--speed-fast: .18s;--speed-normal: .32s;--speed-slow: .6s}[data-theme=light]{--bg-base: #e8ecf4;--bg-gradient-mesh-1: rgba(56, 189, 248, .35);--bg-gradient-mesh-2: rgba(168, 85, 247, .22);--bg-gradient-mesh-3: rgba(251, 146, 60, .25);--glass-surface-base: rgba(255, 255, 255, .45);--glass-surface-card: rgba(255, 255, 255, .55);--glass-surface-elevated: rgba(255, 255, 255, .75);--glass-surface-pill: rgba(255, 255, 255, .6);--glass-surface-sunken: rgba(0, 0, 0, .04);--glass-border-light: rgba(255, 255, 255, .85);--glass-border-subtle: rgba(255, 255, 255, .45);--glass-border-dim: rgba(0, 0, 0, .06);--text-primary: #0f172a;--text-secondary: rgba(15, 23, 42, .75);--text-tertiary: rgba(15, 23, 42, .5);--text-muted: rgba(15, 23, 42, .3);--glass-shadow-ambient: 0 16px 36px -8px rgba(0, 0, 0, .12);--glass-shadow-float: 0 24px 48px -12px rgba(0, 0, 0, .16)}[data-mode=focus]{--bg-gradient-mesh-1: rgba(249, 115, 22, .32);--bg-gradient-mesh-2: rgba(239, 68, 68, .28);--bg-gradient-mesh-3: rgba(168, 85, 247, .2);--bg-gradient-mesh-4: rgba(244, 63, 94, .18);--accent-primary: #fb923c;--accent-gradient: linear-gradient(135deg, #f97316 0%, #ec4899 100%);--accent-glow: rgba(249, 115, 22, .48)}[data-mode=break]{--bg-gradient-mesh-1: rgba(16, 185, 129, .35);--bg-gradient-mesh-2: rgba(6, 182, 212, .28);--bg-gradient-mesh-3: rgba(59, 130, 246, .2);--accent-primary: #10b981;--accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);--accent-glow: rgba(16, 185, 129, .48)}.glass-panel{background:var(--glass-surface-card);backdrop-filter:var(--glass-blur-md);-webkit-backdrop-filter:var(--glass-blur-md);border:1px solid var(--glass-border-subtle);border-radius:var(--radius-lg);box-shadow:var(--glass-shadow-ambient),var(--glass-shadow-inset);position:relative;overflow:hidden;transition:transform var(--speed-normal) var(--spring-smooth),box-shadow var(--speed-normal) var(--spring-smooth),background var(--speed-normal) ease}.glass-panel:before{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,#ffffff14,#fff0);pointer-events:none}.glass-button{background:var(--glass-surface-elevated);backdrop-filter:var(--glass-blur-sm);-webkit-backdrop-filter:var(--glass-blur-sm);border:1px solid var(--glass-border-light);border-radius:var(--radius-full);color:var(--text-primary);font-family:inherit;font-weight:500;padding:12px 24px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px #00000026,var(--glass-shadow-inset);transition:all var(--speed-fast) var(--spring-bounce);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}.glass-button:hover{background:#ffffff2e;border-color:#fff6;transform:translateY(-2px) scale(1.02);box-shadow:0 8px 24px #00000040,var(--glass-shadow-inset)}.glass-button:active{transform:translateY(1px) scale(.97);background:#ffffff1f}.glass-button.primary{background:var(--accent-gradient);border-color:#fff6;color:#fff;box-shadow:var(--glass-glow-accent),var(--glass-shadow-inset);font-weight:600}.glass-button.primary:hover{filter:brightness(1.1);box-shadow:0 0 40px var(--accent-glow),var(--glass-shadow-inset)}.glass-pill{background:var(--glass-surface-pill);backdrop-filter:var(--glass-blur-sm);-webkit-backdrop-filter:var(--glass-blur-sm);border:1px solid var(--glass-border-subtle);border-radius:var(--radius-full);padding:6px 14px;font-size:.85rem;color:var(--text-secondary)}*{box-sizing:border-box;margin:0;padding:0}body{font-family:Plus Jakarta Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background-color:var(--bg-base);color:var(--text-primary);min-height:100vh;min-height:100dvh;overflow-x:hidden;user-select:none;-webkit-user-select:none;transition:background-color var(--speed-slow) ease}.liquid-canvas{position:fixed;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;pointer-events:none}.liquid-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.75;transition:background var(--speed-slow) ease,transform 12s infinite alternate ease-in-out;will-change:transform}.orb-1{width:500px;height:500px;top:-10%;left:-10%;background:var(--bg-gradient-mesh-1);animation:floatOrb1 20s infinite alternate ease-in-out}.orb-2{width:550px;height:550px;bottom:-15%;right:-10%;background:var(--bg-gradient-mesh-2);animation:floatOrb2 25s infinite alternate ease-in-out}.orb-3{width:400px;height:400px;top:40%;left:30%;background:var(--bg-gradient-mesh-3);animation:floatOrb3 18s infinite alternate ease-in-out}@keyframes floatOrb1{0%{transform:translate(0) scale(1)}50%{transform:translate(60px,80px) scale(1.15)}to{transform:translate(-40px,40px) scale(.9)}}@keyframes floatOrb2{0%{transform:translate(0) scale(1)}50%{transform:translate(-80px,-60px) scale(1.2)}to{transform:translate(50px,-30px) scale(.95)}}@keyframes floatOrb3{0%{transform:translate(0) scale(1)}50%{transform:translate(50px,-50px) scale(1.25)}to{transform:translate(-70px,60px) scale(.85)}}#app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:900px;margin:0 auto;padding:24px 20px calc(90px + env(safe-area-inset-bottom,24px)) 20px}.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.app-brand{display:flex;align-items:center;gap:12px}.app-brand-icon{width:40px;height:40px;border-radius:12px;background:var(--glass-surface-elevated);-webkit-backdrop-filter:var(--glass-blur-sm);backdrop-filter:var(--glass-blur-sm);display:flex;align-items:center;justify-content:center;border:1px solid var(--glass-border-light);box-shadow:0 4px 12px #0003}.app-brand-title{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;background:linear-gradient(180deg,#ffffff 30%,var(--text-secondary) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.header-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-surface-base);-webkit-backdrop-filter:var(--glass-blur-sm);backdrop-filter:var(--glass-blur-sm);border:1px solid var(--glass-border-subtle);color:var(--text-primary);cursor:pointer;transition:all var(--speed-fast) var(--spring-bounce)}.icon-btn:hover{background:var(--glass-surface-elevated);transform:scale(1.08)}.icon-btn:active{transform:scale(.92)}.glass-tab-bar{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translate(-50%);z-index:100;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--glass-surface-base);backdrop-filter:var(--glass-blur-dock);-webkit-backdrop-filter:var(--glass-blur-dock);border:1px solid var(--glass-border-light);border-radius:var(--radius-full);box-shadow:var(--glass-shadow-float);max-width:95vw}.tab-btn{background:transparent;border:none;outline:none;color:var(--text-secondary);padding:10px 18px;border-radius:var(--radius-full);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.72rem;font-weight:600;cursor:pointer;position:relative;transition:all var(--speed-normal) var(--spring-smooth)}.tab-btn svg{width:20px;height:20px;transition:transform var(--speed-normal) var(--spring-bounce)}.tab-btn:hover{color:var(--text-primary)}.tab-btn.active{color:#fff;background:var(--glass-surface-elevated);box-shadow:0 4px 16px #0003,var(--glass-shadow-inset);border:1px solid var(--glass-border-subtle)}.tab-btn.active svg{transform:translateY(-2px) scale(1.1);color:var(--accent-primary)}.tab-btn.active:after{content:"";position:absolute;bottom:4px;width:4px;height:4px;border-radius:50%;background:var(--accent-primary);box-shadow:0 0 8px var(--accent-primary)}.view-container{flex:1;position:relative;display:flex;flex-direction:column}.view-section{display:none;animation:fadeInSpring var(--speed-normal) var(--spring-smooth)}.view-section.active{display:flex;flex-direction:column;gap:20px}@keyframes fadeInSpring{0%{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}.num-mono{font-family:JetBrains Mono,monospace;font-variant-numeric:tabular-nums}.world-container{display:flex;flex-direction:column;gap:20px}.local-hero-card{padding:32px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;border-radius:var(--radius-lg);background:radial-gradient(circle at 50% 20%,#ffffff1f,#ffffff0a)}.local-city{font-size:1.1rem;font-weight:500;color:var(--text-secondary);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}.local-time{font-size:clamp(3.5rem,12vw,5.5rem);font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:8px;background:linear-gradient(180deg,#fff 40%,#ffffffb3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 16px rgba(0,0,0,.3))}.local-date{font-size:1rem;color:var(--text-tertiary);font-weight:400}.analog-clock-container{margin:16px 0;width:140px;height:140px;position:relative}.analog-dial{width:100%;height:100%;border-radius:50%;border:1px solid var(--glass-border-light);background:#ffffff08;position:relative;box-shadow:0 8px 24px #0000004d,inset 0 2px 4px #ffffff26}.analog-hand{position:absolute;bottom:50%;left:50%;transform-origin:bottom center;border-radius:4px}.hand-hour{width:4px;height:38px;background:#fff;margin-left:-2px}.hand-minute{width:3px;height:52px;background:#ffffffd9;margin-left:-1.5px}.hand-second{width:1.5px;height:60px;background:#ef4444;margin-left:-.75px}.analog-pin{width:10px;height:10px;background:#fff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px #00000080}.section-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px}.section-title{font-size:1.25rem;font-weight:700;letter-spacing:-.01em}.cities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}.city-card{padding:20px;display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius-md);position:relative}.city-info{display:flex;flex-direction:column;gap:4px}.city-offset{font-size:.8rem;color:var(--text-tertiary);font-weight:500}.city-name{font-size:1.3rem;font-weight:700;letter-spacing:-.02em}.city-time-wrap{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.city-time{font-size:1.7rem;font-weight:600;letter-spacing:-.02em}.city-period{font-size:.85rem;color:var(--text-tertiary)}.city-delete-btn{position:absolute;top:8px;right:8px;opacity:0;width:24px;height:24px;border-radius:50%;background:#ef444433;border:1px solid rgba(239,68,68,.4);color:#ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity var(--speed-fast) ease,transform var(--speed-fast) var(--spring-bounce)}.city-card:hover .city-delete-btn{opacity:1}.city-delete-btn:hover{transform:scale(1.15);background:#ef444466}.glass-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;background:#0009;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity var(--speed-normal) ease}.glass-modal-backdrop.open{opacity:1;pointer-events:auto}.glass-modal{width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;background:#121826d9;-webkit-backdrop-filter:var(--glass-blur-lg);backdrop-filter:var(--glass-blur-lg);border:1px solid var(--glass-border-light);border-radius:var(--radius-lg);box-shadow:0 24px 60px #0009;transform:scale(.92) translateY(20px);transition:transform var(--speed-normal) var(--spring-smooth)}.glass-modal-backdrop.open .glass-modal{transform:scale(1) translateY(0)}.modal-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--glass-border-dim)}.modal-title{font-size:1.2rem;font-weight:700}.modal-body{padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}.glass-input{width:100%;padding:14px 18px;background:var(--glass-surface-sunken);border:1px solid var(--glass-border-subtle);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:1rem;outline:none;transition:border-color var(--speed-fast) ease}.glass-input:focus{border-color:var(--accent-primary);box-shadow:0 0 16px var(--accent-glow)}.city-select-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}.city-option-item{padding:12px 16px;border-radius:var(--radius-sm);background:var(--glass-surface-base);border:1px solid var(--glass-border-dim);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background var(--speed-fast) ease}.city-option-item:hover{background:var(--glass-surface-elevated);border-color:var(--glass-border-light)}.glass-switch{position:relative;display:inline-block;width:52px;height:30px}.glass-switch input{opacity:0;width:0;height:0}.switch-slider{position:absolute;cursor:pointer;top:0;right:0;bottom:0;left:0;background:#ffffff26;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--glass-border-subtle);border-radius:34px;transition:all var(--speed-normal) var(--spring-smooth)}.switch-slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background-color:#fff;border-radius:50%;box-shadow:0 2px 8px #0000004d;transition:all var(--speed-normal) var(--spring-bounce)}.glass-switch input:checked+.switch-slider{background:var(--accent-gradient);border-color:#fff6;box-shadow:var(--glass-glow-accent)}.glass-switch input:checked+.switch-slider:before{transform:translate(22px)}.alarm-list{display:flex;flex-direction:column;gap:12px}.alarm-card{padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius-md);transition:all var(--speed-normal) var(--spring-smooth)}.alarm-card.disabled{opacity:.55}.alarm-info{display:flex;flex-direction:column;gap:4px}.alarm-time-wrap{display:flex;align-items:baseline;gap:6px}.alarm-time{font-size:2.2rem;font-weight:700;letter-spacing:-.03em}.alarm-ampm{font-size:1rem;font-weight:500;color:var(--text-tertiary)}.alarm-label{font-size:.9rem;color:var(--text-secondary)}.alarm-days{font-size:.8rem;color:var(--text-muted)}.alarm-actions{display:flex;align-items:center;gap:14px}.counter-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 10px}.ring-wrapper{position:relative;width:min(320px,80vw);height:min(320px,80vw);display:flex;align-items:center;justify-content:center}.ring-svg{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;transform:rotate(-90deg)}.ring-bg{fill:none;stroke:#ffffff14;stroke-width:8}.ring-progress{fill:none;stroke:var(--accent-primary);stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 12px var(--accent-glow));transition:stroke-dashoffset .1s linear,stroke var(--speed-normal) ease}.counter-center-text{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center}.counter-digits{font-size:clamp(2.4rem,8vw,3.8rem);font-weight:700;letter-spacing:-.04em;background:linear-gradient(180deg,#fff 40%,#ffffffbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}.counter-sub{font-size:1rem;color:var(--text-tertiary);margin-top:6px;font-weight:500}.counter-controls{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:28px}.laps-container{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;padding:8px 4px}.lap-item{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-radius:var(--radius-sm);background:var(--glass-surface-base);border:1px solid var(--glass-border-dim);font-size:.95rem}.lap-item.fastest{color:#10b981;border-color:#10b98159;background:#10b98114}.lap-item.slowest{color:#ef4444;border-color:#ef444459;background:#ef444414}.timer-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;width:100%;max-width:440px}.preset-chip{padding:10px 14px;border-radius:var(--radius-sm);background:var(--glass-surface-card);border:1px solid var(--glass-border-subtle);color:var(--text-primary);font-size:.9rem;font-weight:600;cursor:pointer;transition:all var(--speed-fast) var(--spring-bounce);text-align:center}.preset-chip:hover{background:var(--glass-surface-elevated);transform:translateY(-2px);border-color:var(--glass-border-light)}.mini-widget{position:fixed;bottom:90px;right:20px;z-index:9999;width:180px;height:180px;border-radius:50%;background:#0a0f1dd1;backdrop-filter:var(--glass-blur-lg);-webkit-backdrop-filter:var(--glass-blur-lg);border:2px solid var(--glass-border-light);box-shadow:0 20px 50px #000000b3,0 0 25px var(--accent-glow);display:none;flex-direction:column;align-items:center;justify-content:center;cursor:grab;-webkit-user-select:none;user-select:none;touch-action:none;animation:squeezePop .35s var(--spring-bounce)}.mini-widget:active{cursor:grabbing}.mini-widget.active{display:flex}@keyframes squeezePop{0%{transform:scale(.4) rotate(-15deg);opacity:0}70%{transform:scale(1.08) rotate(3deg);opacity:1}to{transform:scale(1) rotate(0)}}.mini-widget .mini-time{font-size:1.5rem;font-weight:700;line-height:1.1;text-align:center;margin-top:4px}.mini-widget .mini-label{font-size:.75rem;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:.05em}.mini-expand-icon{position:absolute;top:14px;width:16px;height:16px;color:var(--text-secondary);opacity:.6}</style>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
